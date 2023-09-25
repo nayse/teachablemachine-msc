@@ -1,7 +1,7 @@
 # teachablemachine-msc
 
-run 
+in the main folder please run:
 
 ```
-python -m http.server in the main folder
+python -m http.server 
 ```
