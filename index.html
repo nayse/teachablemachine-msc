@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mini book repository</title>
+    <link rel="stylesheet" href="styles.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #84999D; 
+        }
+
+        h1 {
+            color: rgb(255, 255, 255); 
+        }
+
+        
+        .file-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px; 
+        }
+
+        
+        .file-input-label {
+            padding: 10px 20px;
+            background-color: #D6958B; 
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px; 
+        }
+
+        .file-input-label:hover {
+            background-color: #D6958B; 
+        }
+
+        .file-input-text {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #d8a39b;
+            border: 1px solid #c26a5d; 
+            border-radius: 5px;
+            cursor: pointer;
+            color: white; 
+        }
+
+        
+        .file-input-text:hover {
+            background-color: #D6958B;
+        }
+
+        
+        input[type="file"] {
+            display: none; 
+        }
+
+        
+        button {
+            padding: 8px 16px; 
+            background-color: #d6958b; 
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px; 
+        }
+
+        button:hover {
+            background-color: #D6958B; 
+        }
+
+        #result {
+            margin-top: 20px;
+            color: gray; 
+        }
+
+
+        .gif-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="gif-container">
+        <img src="https://media4.giphy.com/media/dzOxxKsMbWhGU8X9Sn/giphy.gif?cid=6c09b952vv0o8y7v381j78pegkgc58wcwqiu18l0sqzz1n7a&ep=v1_internal_gif_by_id&rid=giphy.gif&ct=s" alt="Bookstore GIF" width="200">
+    </div>
+    <h1>mini book repository</h1>
+ 
+    <img id="bookImage" src="pngwing.png" alt="pic" style="max-width: 35%; max-height: 180px;"> 
+    
+    <div class="file-input-container">
+        <label class="file-input-label">
+            <span class="file-input-text">carregue uma foto do livro</span>
+            <input type="file" id="imageInput" accept="image/*" onchange="updateImagePreview(this)">
+        </label>
+    </div>
+    <button type="button" onclick="identifyBook()">encontrar livro</button>
+
+    <div id="result" style="font-size: 24px; color: #FF5733;"></div>
+    
+    
+    <script type="text/javascript">
+        let model, maxPredictions;
+
+        function updateImagePreview(input) {
+            const bookImage = document.getElementById('bookImage');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    bookImage.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                bookImage.src = 'pngwing.png'; 
+            }
+        }
+
+
+        async function loadModel() {
+            const URL = "./my_model/";
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+        }
+
+        loadModel();
+
+        
+        async function predict(imageFile) {
+           
+            const image = new Image();
+            image.src = URL.createObjectURL(imageFile);
+
+            
+            await new Promise((resolve) => {
+                image.onload = resolve;
+            });
+
+    
+            const prediction = await model.predict(image);
+
+            
+            let maxProbability = 0;
+            let predictedClass = "";
+
+            for (let i = 0; i < maxPredictions; i++) {
+                if (prediction[i].probability > maxProbability) {
+                    maxProbability = prediction[i].probability;
+                    predictedClass = prediction[i].className;
+                }
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `Livro encontrado: ${predictedClass} (${(maxProbability * 100).toFixed(2)}%)`;
+        }
+
+        async function identifyBook() {
+            const imageInput = document.getElementById('imageInput');
+            const resultDiv = document.getElementById('result');
+
+            
+            const file = imageInput.files[0];
+
+  
+            if (file) {
+                resultDiv.innerHTML = 'Buscando...';
+                await predict(file);
+            } else {
+                resultDiv.innerHTML = '';
+            }
+        }
+    </script>
+</body
